@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -47,6 +48,34 @@ class ProductoServiceTest {
 
         assertEquals(new BigDecimal("0.00"), producto.getPrecio());
         assertEquals(0, producto.getStock());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Harina 1kg", "harina 1kg", "HARINA 1KG", "  Harina 1kg  "})
+    void rechazaNombreDuplicadoSinDistinguirMayusculas(String nombreRepetido) throws Exception {
+        servicio.registrar("Harina 1kg", "2.50", "15");
+
+        ValidacionException error = assertThrows(ValidacionException.class,
+                () -> servicio.registrar(nombreRepetido, "3.00", "5"));
+
+        assertEquals("Ya existe un producto con el nombre \"" + nombreRepetido.trim() + "\".", error.getMessage());
+        assertEquals(1, dao.listar().size());
+    }
+
+    @Test
+    void rechazaNombreDuplicadoConAcentosEnOtraCapitalizacion() throws Exception {
+        servicio.registrar("Azúcar", "0.95", "30");
+
+        assertThrows(ValidacionException.class, () -> servicio.registrar("AZÚCAR", "1.00", "10"));
+        assertEquals(1, dao.listar().size());
+    }
+
+    @Test
+    void permiteNombresDistintosAunqueSeParezcan() throws Exception {
+        servicio.registrar("Aceite 1L", "3.45", "20");
+        servicio.registrar("Aceite 5L", "15.90", "8");
+
+        assertEquals(2, dao.listar().size());
     }
 
     @ParameterizedTest

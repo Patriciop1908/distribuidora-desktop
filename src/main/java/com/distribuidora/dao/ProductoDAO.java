@@ -69,6 +69,18 @@ public class ProductoDAO {
         }
     }
 
+    // Compara sin distinguir mayúsculas/minúsculas, incluidas letras acentuadas y la ñ
+    public boolean existePorNombre(String nombre) throws SQLException {
+        String sql = "SELECT 1 FROM productos WHERE minusculas(nombre) = minusculas(?) LIMIT 1";
+        try (Connection conn = ConexionDB.obtenerConexion(url);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     public List<Producto> listar() throws SQLException {
         String sql = "SELECT id, nombre, precio, stock FROM productos ORDER BY id";
         List<Producto> productos = new ArrayList<>();

@@ -19,6 +19,7 @@ public class ProductoService {
     /**
      * Valida los datos del formulario y guarda el producto.
      * Acepta coma o punto como separador decimal en el precio.
+     * Rechaza nombres ya registrados, sin distinguir mayúsculas/minúsculas.
      */
     public Producto registrar(String nombre, String precioTexto, String stockTexto)
             throws ValidacionException, SQLException {
@@ -28,6 +29,11 @@ public class ProductoService {
         }
 
         Producto producto = new Producto(nombreLimpio, validarPrecio(precioTexto), validarStock(stockTexto));
+
+        if (productoDAO.existePorNombre(nombreLimpio)) {
+            throw new ValidacionException("Ya existe un producto con el nombre \"" + nombreLimpio + "\".");
+        }
+
         productoDAO.insertar(producto);
         return producto;
     }
