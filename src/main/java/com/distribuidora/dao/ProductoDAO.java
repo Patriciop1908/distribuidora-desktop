@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,28 +28,53 @@ public class ProductoDAO {
     }
 
     public void crearTablaSiNoExiste() throws SQLException {
+        // productos referencia a proveedores, así que esa tabla tiene que existir antes
+        new ProveedorDAO(url);
+
         // El precio se guarda como TEXT para conservar el valor exacto del BigDecimal
         String sql = """
                 CREATE TABLE IF NOT EXISTS productos (
-                    id     INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nombre TEXT    NOT NULL,
-                    precio TEXT    NOT NULL,
-                    stock  INTEGER NOT NULL
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre       TEXT    NOT NULL,
+                    precio       TEXT    NOT NULL,
+                    stock        INTEGER NOT NULL,
+                    proveedor_id INTEGER REFERENCES proveedores(id)
                 )
                 """;
         try (Connection conn = ConexionDB.obtenerConexion(url);
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            agregarColumnaProveedorSiFalta(conn);
+        }
+    }
+
+    // Las bases de datos creadas antes de existir los proveedores no tienen la columna proveedor_id
+    private void agregarColumnaProveedorSiFalta(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement();
+             ResultSet columnas = stmt.executeQuery("PRAGMA table_info(productos)")) {
+            while (columnas.next()) {
+                if ("proveedor_id".equalsIgnoreCase(columnas.getString("name"))) {
+                    return;
+                }
+            }
+        }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE productos ADD COLUMN proveedor_id INTEGER REFERENCES proveedores(id)");
         }
     }
 
     public void insertar(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, precio, stock) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO productos (nombre, precio, stock, proveedor_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConexionDB.obtenerConexion(url);
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, producto.getNombre());
             ps.setString(2, producto.getPrecio().toPlainString());
             ps.setInt(3, producto.getStock());
+            if (producto.getProveedorId() == null) {
+                ps.setNull(4, Types.INTEGER);
+            } else {
+                ps.setInt(4, producto.getProveedorId());
+            }
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -59,7 +85,7 @@ public class ProductoDAO {
     }
 
     public Optional<Producto> consultarPorId(int id) throws SQLException {
-        String sql = "SELECT id, nombre, precio, stock FROM productos WHERE id = ?";
+        String sql = "SELECT id, nombre, precio, stock, proveedor_id FROM productos WHERE id = ?";
         try (Connection conn = ConexionDB.obtenerConexion(url);
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -82,7 +108,7 @@ public class ProductoDAO {
     }
 
     public List<Producto> listar() throws SQLException {
-        String sql = "SELECT id, nombre, precio, stock FROM productos ORDER BY id";
+        String sql = "SELECT id, nombre, precio, stock, proveedor_id FROM productos ORDER BY id";
         List<Producto> productos = new ArrayList<>();
         try (Connection conn = ConexionDB.obtenerConexion(url);
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -95,10 +121,14 @@ public class ProductoDAO {
     }
 
     private Producto mapear(ResultSet rs) throws SQLException {
+        // getInt devuelve 0 para NULL; wasNull distingue "sin proveedor"
+        int proveedorId = rs.getInt("proveedor_id");
+        Integer proveedorIdOpcional = rs.wasNull() ? null : proveedorId;
         return new Producto(
                 rs.getInt("id"),
                 rs.getString("nombre"),
                 new BigDecimal(rs.getString("precio")),
-                rs.getInt("stock"));
+                rs.getInt("stock"),
+                proveedorIdOpcional);
     }
 }

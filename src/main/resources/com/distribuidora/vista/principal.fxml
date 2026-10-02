@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<TabPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="com.distribuidora.controlador.PrincipalController"
+         tabClosingPolicy="UNAVAILABLE" stylesheets="@estilos.css">
+    <Tab fx:id="tabProductos" text="Productos">
+        <StackPane>
+            <fx:include fx:id="formProductos" source="producto-form.fxml"/>
+        </StackPane>
+    </Tab>
+    <Tab text="Proveedores">
+        <StackPane>
+            <fx:include source="proveedor-form.fxml"/>
+        </StackPane>
+    </Tab>
+</TabPane>

@@ -1,7 +1,9 @@
 package com.distribuidora.servicio;
 
 import com.distribuidora.dao.ProductoDAO;
+import com.distribuidora.dao.ProveedorDAO;
 import com.distribuidora.modelo.Producto;
+import com.distribuidora.modelo.Proveedor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -14,6 +16,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,12 +25,14 @@ class ProductoServiceTest {
     @TempDir
     Path carpetaTemporal;
 
+    private String url;
     private ProductoDAO dao;
     private ProductoService servicio;
 
     @BeforeEach
     void preparar() throws SQLException {
-        dao = new ProductoDAO("jdbc:sqlite:" + carpetaTemporal.resolve("prueba.db"));
+        url = "jdbc:sqlite:" + carpetaTemporal.resolve("prueba.db");
+        dao = new ProductoDAO(url);
         servicio = new ProductoService(dao);
     }
 
@@ -40,6 +45,23 @@ class ProductoServiceTest {
         assertEquals(new BigDecimal("2.50"), producto.getPrecio());
         assertEquals(15, producto.getStock());
         assertEquals(1, dao.listar().size());
+    }
+
+    @Test
+    void registrarSinProveedorDejaProveedorNull() throws Exception {
+        Producto producto = servicio.registrar("Harina 1kg", "2.50", "15");
+
+        assertNull(producto.getProveedorId());
+    }
+
+    @Test
+    void registrarConProveedorGuardaLaRelacion() throws Exception {
+        Proveedor proveedor = new Proveedor("Molinos Unidos", null, null, null);
+        new ProveedorDAO(url).insertar(proveedor);
+
+        Producto producto = servicio.registrar("Harina 1kg", "2.50", "15", proveedor.getId());
+
+        assertEquals(proveedor.getId(), dao.consultarPorId(producto.getId()).orElseThrow().getProveedorId());
     }
 
     @Test

@@ -1,0 +1,14 @@
+/* Estilos compartidos por todas las pantallas */
+
+.titulo-formulario {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.mensaje-exito {
+    -fx-text-fill: #2e7d32;
+}
+
+.mensaje-error {
+    -fx-text-fill: #c62828;
+}

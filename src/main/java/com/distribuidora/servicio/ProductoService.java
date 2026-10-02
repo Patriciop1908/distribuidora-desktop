@@ -23,12 +23,22 @@ public class ProductoService {
      */
     public Producto registrar(String nombre, String precioTexto, String stockTexto)
             throws ValidacionException, SQLException {
+        return registrar(nombre, precioTexto, stockTexto, null);
+    }
+
+    /**
+     * Igual que {@link #registrar(String, String, String)}, asociando el producto a un proveedor.
+     * proveedorId puede ser null si el producto no tiene proveedor.
+     */
+    public Producto registrar(String nombre, String precioTexto, String stockTexto, Integer proveedorId)
+            throws ValidacionException, SQLException {
         String nombreLimpio = nombre == null ? "" : nombre.trim();
         if (nombreLimpio.isEmpty()) {
             throw new ValidacionException("El nombre es obligatorio.");
         }
 
-        Producto producto = new Producto(nombreLimpio, validarPrecio(precioTexto), validarStock(stockTexto));
+        Producto producto = new Producto(
+                nombreLimpio, validarPrecio(precioTexto), validarStock(stockTexto), proveedorId);
 
         if (productoDAO.existePorNombre(nombreLimpio)) {
             throw new ValidacionException("Ya existe un producto con el nombre \"" + nombreLimpio + "\".");

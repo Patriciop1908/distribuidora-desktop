@@ -8,18 +8,25 @@ public class Producto {
     private String nombre;
     private BigDecimal precio;
     private int stock;
+    // Opcional: null si el producto no tiene proveedor asociado
+    private Integer proveedorId;
 
     public Producto() {
     }
 
     public Producto(String nombre, BigDecimal precio, int stock) {
+        this(nombre, precio, stock, null);
+    }
+
+    public Producto(String nombre, BigDecimal precio, int stock, Integer proveedorId) {
         this.nombre = nombre;
         this.precio = precio;
         this.stock = stock;
+        this.proveedorId = proveedorId;
     }
 
-    public Producto(int id, String nombre, BigDecimal precio, int stock) {
-        this(nombre, precio, stock);
+    public Producto(int id, String nombre, BigDecimal precio, int stock, Integer proveedorId) {
+        this(nombre, precio, stock, proveedorId);
         this.id = id;
     }
 
@@ -55,8 +62,17 @@ public class Producto {
         this.stock = stock;
     }
 
+    public Integer getProveedorId() {
+        return proveedorId;
+    }
+
+    public void setProveedorId(Integer proveedorId) {
+        this.proveedorId = proveedorId;
+    }
+
     @Override
     public String toString() {
-        return "Producto{id=" + id + ", nombre='" + nombre + "', precio=" + precio + ", stock=" + stock + "}";
+        return "Producto{id=" + id + ", nombre='" + nombre + "', precio=" + precio + ", stock=" + stock
+                + ", proveedorId=" + proveedorId + "}";
     }
 }
