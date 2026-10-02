@@ -1,4 +1,6 @@
 module com.distribuidora {
+    // transitive: Main (paquete exportado) expone Stage de javafx.graphics en su API pública
+    requires transitive javafx.graphics;
     requires javafx.controls;
     requires javafx.fxml;
     requires java.sql;
