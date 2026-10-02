@@ -12,6 +12,7 @@ Aplicación de escritorio en Java 21 + JavaFX 21 (LTS) con Maven y SQLite.
 
 - `com.distribuidora.modelo`: entidades (p. ej. `Producto`)
 - `com.distribuidora.dao`: acceso a datos (`ConexionDB` y los DAO)
+- `com.distribuidora.servicio`: lógica de negocio y validaciones (lanzan `ValidacionException` con mensajes para el usuario)
 - `com.distribuidora.controlador`: controllers de JavaFX
 - `src/main/resources/com/distribuidora/vista`: archivos FXML
 
